@@ -3,5 +3,11 @@
   "name": "Ahmed Zhran Profiles",
   "version": "1.0.0",
   "author": "ahmed-zhran",
-  "components": []
+  "components": [
+    {
+      "name": "z-ws",
+      "type": "profile",
+      "description": "Published profile z-ws"
+    }
+  ]
 }

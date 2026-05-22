@@ -1,0 +1,13 @@
+{
+  "self": {
+    "registry": "https://ahmed-zhran.github.io/ocx-profiles/",
+    "src": "zhran/z-ws"
+  },
+  "parents": [
+    {
+      "registry": "https://registry.kdco.dev",
+      "src": "kdco/ws",
+      "name": "ws"
+    }
+  ]
+}
