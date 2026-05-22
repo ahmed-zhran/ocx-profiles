@@ -7,6 +7,10 @@
       "description": "Published profile z-ws",
       "files": [
         {
+          "path": "profiles/z-ws/README.md",
+          "target": "README.md"
+        },
+        {
           "path": "profiles/z-ws/agents/coder.md",
           "target": "agents/coder.md"
         },
