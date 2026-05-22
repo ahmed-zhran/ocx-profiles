@@ -5,11 +5,6 @@
   "author": "ahmed-zhran",
   "components": [
     {
-      "name": "ws",
-      "type": "profile",
-      "description": "Published profile ws"
-    },
-    {
       "name": "z-ws-v2",
       "type": "profile",
       "description": "Published profile z-ws-v2"
