@@ -35,12 +35,12 @@
           "target": "opencode.jsonc"
         },
         {
-          "path": "profiles/z-ws/package-lock.json",
-          "target": "package-lock.json"
-        },
-        {
           "path": "profiles/z-ws/package.json",
           "target": "package.json"
+        },
+        {
+          "path": "profiles/z-ws/parent-tree.json",
+          "target": "parent-tree.json"
         },
         {
           "path": "profiles/z-ws/plugins/background-agents.ts",
