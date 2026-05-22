@@ -159,6 +159,162 @@
         }
       ],
       "dependencies": []
+    },
+    {
+      "name": "z-ws",
+      "type": "profile",
+      "description": "Published profile z-ws",
+      "files": [
+        {
+          "path": "profiles/z-ws/agents/coder.md",
+          "target": "agents/coder.md"
+        },
+        {
+          "path": "profiles/z-ws/agents/researcher.md",
+          "target": "agents/researcher.md"
+        },
+        {
+          "path": "profiles/z-ws/agents/reviewer.md",
+          "target": "agents/reviewer.md"
+        },
+        {
+          "path": "profiles/z-ws/agents/scribe.md",
+          "target": "agents/scribe.md"
+        },
+        {
+          "path": "profiles/z-ws/commands/review.md",
+          "target": "commands/review.md"
+        },
+        {
+          "path": "profiles/z-ws/ocx.jsonc",
+          "target": "ocx.jsonc"
+        },
+        {
+          "path": "profiles/z-ws/opencode.jsonc",
+          "target": "opencode.jsonc"
+        },
+        {
+          "path": "profiles/z-ws/package-lock.json",
+          "target": "package-lock.json"
+        },
+        {
+          "path": "profiles/z-ws/package.json",
+          "target": "package.json"
+        },
+        {
+          "path": "profiles/z-ws/plugins/background-agents.ts",
+          "target": "plugins/background-agents.ts"
+        },
+        {
+          "path": "profiles/z-ws/plugins/kdco-primitives/cmux.ts",
+          "target": "plugins/kdco-primitives/cmux.ts"
+        },
+        {
+          "path": "profiles/z-ws/plugins/kdco-primitives/get-project-id.ts",
+          "target": "plugins/kdco-primitives/get-project-id.ts"
+        },
+        {
+          "path": "profiles/z-ws/plugins/kdco-primitives/index.ts",
+          "target": "plugins/kdco-primitives/index.ts"
+        },
+        {
+          "path": "profiles/z-ws/plugins/kdco-primitives/log-warn.ts",
+          "target": "plugins/kdco-primitives/log-warn.ts"
+        },
+        {
+          "path": "profiles/z-ws/plugins/kdco-primitives/mutex.ts",
+          "target": "plugins/kdco-primitives/mutex.ts"
+        },
+        {
+          "path": "profiles/z-ws/plugins/kdco-primitives/shell.ts",
+          "target": "plugins/kdco-primitives/shell.ts"
+        },
+        {
+          "path": "profiles/z-ws/plugins/kdco-primitives/temp.ts",
+          "target": "plugins/kdco-primitives/temp.ts"
+        },
+        {
+          "path": "profiles/z-ws/plugins/kdco-primitives/terminal-detect.ts",
+          "target": "plugins/kdco-primitives/terminal-detect.ts"
+        },
+        {
+          "path": "profiles/z-ws/plugins/kdco-primitives/types.ts",
+          "target": "plugins/kdco-primitives/types.ts"
+        },
+        {
+          "path": "profiles/z-ws/plugins/kdco-primitives/with-timeout.ts",
+          "target": "plugins/kdco-primitives/with-timeout.ts"
+        },
+        {
+          "path": "profiles/z-ws/plugins/notify.ts",
+          "target": "plugins/notify.ts"
+        },
+        {
+          "path": "profiles/z-ws/plugins/notify/backend.ts",
+          "target": "plugins/notify/backend.ts"
+        },
+        {
+          "path": "profiles/z-ws/plugins/notify/cmux.ts",
+          "target": "plugins/notify/cmux.ts"
+        },
+        {
+          "path": "profiles/z-ws/plugins/notify/status.ts",
+          "target": "plugins/notify/status.ts"
+        },
+        {
+          "path": "profiles/z-ws/plugins/notify/title.ts",
+          "target": "plugins/notify/title.ts"
+        },
+        {
+          "path": "profiles/z-ws/plugins/workspace-plugin.ts",
+          "target": "plugins/workspace-plugin.ts"
+        },
+        {
+          "path": "profiles/z-ws/plugins/worktree.ts",
+          "target": "plugins/worktree.ts"
+        },
+        {
+          "path": "profiles/z-ws/plugins/worktree/launch-context.ts",
+          "target": "plugins/worktree/launch-context.ts"
+        },
+        {
+          "path": "profiles/z-ws/plugins/worktree/state.ts",
+          "target": "plugins/worktree/state.ts"
+        },
+        {
+          "path": "profiles/z-ws/plugins/worktree/terminal.ts",
+          "target": "plugins/worktree/terminal.ts"
+        },
+        {
+          "path": "profiles/z-ws/skills/code-philosophy/SKILL.md",
+          "target": "skills/code-philosophy/SKILL.md"
+        },
+        {
+          "path": "profiles/z-ws/skills/code-review/SKILL.md",
+          "target": "skills/code-review/SKILL.md"
+        },
+        {
+          "path": "profiles/z-ws/skills/frontend-philosophy/SKILL.md",
+          "target": "skills/frontend-philosophy/SKILL.md"
+        },
+        {
+          "path": "profiles/z-ws/skills/plan-protocol/SKILL.md",
+          "target": "skills/plan-protocol/SKILL.md"
+        },
+        {
+          "path": "profiles/z-ws/skills/plan-review/SKILL.md",
+          "target": "skills/plan-review/SKILL.md"
+        },
+        {
+          "path": "profiles/z-ws/tools/philosophy.md",
+          "target": "tools/philosophy.md"
+        },
+        {
+          "path": "profiles/z-ws/tui.json",
+          "target": "tui.json"
+        }
+      ],
+      "dependencies": []
     }
   ]
 }

@@ -8,6 +8,11 @@
       "name": "ws",
       "type": "profile",
       "description": "Published profile ws"
+    },
+    {
+      "name": "z-ws",
+      "type": "profile",
+      "description": "Published profile z-ws"
     }
   ]
 }
