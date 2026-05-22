@@ -1,0 +1,13 @@
+{
+  "$schema": "https://ocx.kdco.dev/schemas/v2/registry.json",
+  "name": "Ahmed Zhran Profiles",
+  "version": "1.0.0",
+  "author": "ahmed-zhran",
+  "components": [
+    {
+      "name": "ws",
+      "type": "profile",
+      "description": "Published profile ws"
+    }
+  ]
+}
