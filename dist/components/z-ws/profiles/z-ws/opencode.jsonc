@@ -215,9 +215,9 @@
 			"url": "https://mcp.exa.ai/mcp",
 			"enabled": true
 		},
-		"fast-filesystem": {
+		"filesystem": {
 			"type": "local",
-			"command": ["npx", "-y", "fast-filesystem-mcp"],
+			"command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "/home/zhran"],
 			"enabled": true
 		},
 		"github": {
