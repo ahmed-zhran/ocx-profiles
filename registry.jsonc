@@ -154,6 +154,14 @@
           "target": "skills/plan-review/SKILL.md"
         },
         {
+          "path": "profiles/z-ws/skills/z-mcp/SKILL.md",
+          "target": "skills/z-mcp/SKILL.md"
+        },
+        {
+          "path": "profiles/z-ws/skills/z-skill/SKILL.md",
+          "target": "skills/z-skill/SKILL.md"
+        },
+        {
           "path": "profiles/z-ws/tools/philosophy.md",
           "target": "tools/philosophy.md"
         },

@@ -1,127 +1,367 @@
-# Profile: ws
-> Production-grade OpenCode workspace profile with agent orchestration.
+# ws — OpenCode Workspace Profile
 
-## Quick Start
+> **Workspace profile for OpenCode** — a comprehensive agent orchestration environment with planning, building, coding, research, review, and documentation capabilities.
 
-```bash
-# Add the registry (one-time)
-ocx registry add https://ahmed-zhran.github.io/ocx-profiles/ --name zhran --global
+---
 
-# Install this profile
-ocx profile add ws --source zhran/ws --global
+## Table of Contents
 
-# Launch OpenCode with this profile
-ocx opencode -p ws
-```
+- [Overview](#overview)
+- [Configuration](#configuration)
+  - [opencode.jsonc](#opencodejsonc)
+  - [ocx.jsonc](#ocxjsonc)
+  - [tui.json](#tuijson)
+  - [parent-tree.json](#parent-treejson)
+  - [package.json](#packagejson)
+- [Agents](#agents)
+  - [Agent Matrix](#agent-matrix)
+  - [Agent Details](#agent-details)
+  - [Permission Model](#permission-model)
+- [MCP Servers](#mcp-servers)
+- [Plugins](#plugins)
+  - [NPM Plugins](#npm-plugins)
+  - [TUI Plugins](#tui-plugins)
+  - [Local Plugin Modules](#local-plugin-modules)
+- [Skills](#skills)
+- [Commands](#commands)
+- [Instructions](#instructions)
+- [Delegation Architecture](#delegation-architecture)
+- [Philosophy](#philosophy)
 
-## Features
+---
 
-- **Terminal Renaming**: Terminal windows are renamed to the active project name (`renameWindow: true`)
-- **Secure Context Isolation**: Project `AGENTS.md` is included for task awareness, while `CLAUDE.md`, `CONTEXT.md`, `.opencode/` directories, and `opencode.jsonc/json` files are excluded to prevent configuration leakage between projects
-- **Exclusion Patterns**:
-  - `**/CLAUDE.md`
-  - `**/CONTEXT.md`
-  - `**/.opencode/**`
-  - `**/opencode.jsonc`
-  - `**/opencode.json`
+## Overview
 
-## Model Configuration
+The `ws` profile is a full-featured OpenCode workspace built on the **KDCO registry** (`https://registry.kdco.dev`). It provides a multi-agent orchestration architecture with:
 
-| Role  | Model                         |
-|-------|-------------------------------|
-| Main  | `opencode/big-pickle`         |
-| Small | `opencode/deepseek-v4-flash-free` |
+- **7 specialized agents** (plan, build, coder, explore, researcher, scribe, reviewer), each with distinct models, temperatures, reasoning efforts, and permission scopes.
+- **7 MCP servers** bridging remote services (context7, exa) and local tools (fast-filesystem, github, duckduckgo, playwright, sequential-thinking).
+- **2 NPM plugins** for delegation context persistence and markdown table formatting.
+- **2 TUI plugins** for subagent status line and usage dashboard.
+- **4 local plugin modules** for background agents, OS notifications, workspace management, and git worktrees.
+- **7 skills** covering code philosophy, frontend philosophy, code review, plan protocol/review, and skill/MCP management.
+- **1 instruction file** enforcing philosophy loading before code changes.
+
+---
+
+## Configuration
+
+### opencode.jsonc
+
+The main configuration file defining models, agents, MCP servers, plugins, and instructions.
+
+| Field | Value |
+|-------|-------|
+| `model` | `opencode/big-pickle` |
+| `small_model` | `opencode/deepseek-v4-flash-free` |
+| `instructions` | `["./tools/philosophy.md"]` |
+| `plugin` (npm) | `@tarquinen/opencode-dcp@3.1.3`, `@franlol/opencode-md-table-formatter@0.0.6` |
+
+**MCP Servers:**
+
+| Server | Type | Command / URL |
+|--------|------|---------------|
+| `context7` | remote | `https://mcp.context7.com/mcp` |
+| `exa` | remote | `https://mcp.exa.ai/mcp` |
+| `fast-filesystem` | local | `npx -y fast-filesystem-mcp` |
+| `github` | local | `gh mcp` |
+| `duckduckgo` | local | `npx -y duckduckgo-mcp-server` |
+| `playwright` | local | `npx -y @playwright/mcp` |
+| `sequential-thinking` | local | `npx -y @modelcontextprotocol/server-sequential-thinking` |
+
+### ocx.jsonc
+
+OCX extension configuration.
+
+| Field | Value |
+|-------|-------|
+| `renameWindow` | `true` |
+| `registries` | `kdco` → `https://registry.kdco.dev` |
+| `exclude` | `**/CLAUDE.md`, `**/CONTEXT.md`, `**/.opencode/**`, `**/opencode.jsonc`, `**/opencode.json` |
+
+> **Note:** `**/AGENTS.md` is commented out, meaning AGENTS.md files are **included** (not excluded).
+
+### tui.json
+
+Terminal UI plugin configuration.
+
+| Plugin |
+|--------|
+| `opencode-subagent-statusline` |
+| `opencode-usage-dashboard` |
+
+### parent-tree.json
+
+KDCO profile inheritance tree.
+
+| Field | Value |
+|-------|-------|
+| `self.registry` | `https://registry.kdco.dev` |
+| `self.src` | `kdco/ws` |
+| `parents` | `[]` (root profile — no parents) |
+
+### package.json
+
+Local dependencies for plugins and tooling.
+
+| Dependency | Purpose |
+|------------|---------|
+| `opencode-subagent-statusline` | TUI subagent status bar |
+| `opencode-usage-dashboard` | TUI usage metrics dashboard |
+| `unique-names-generator` | Generates unique readable names for agents/sessions |
+| `zod` | Runtime schema validation |
+| `node-notifier` | Cross-platform OS notifications |
+| `detect-terminal` | Terminal emulator detection |
+| `jsonc-parser` | JSON with Comments parser |
+
+---
 
 ## Agents
 
-### Orchestration Agents
+The profile defines **7 agents**, each with a specific model, temperature, reasoning effort level, and strict permission boundaries.
 
-| Agent  | Model                 | Description                                                                 |
-|--------|-----------------------|-----------------------------------------------------------------------------|
-| `plan` | `opencode/big-pickle` | Architecture design and planning specialist. Has `task` permission, edit/write/bash denied. |
-| `build` | `opencode/big-pickle` | Primary orchestrator. Coordinates implementation via delegation — never implements directly. Has `task` permission, edit/write/bash denied. |
+### Agent Matrix
 
-### Subagents
+| Agent | Model | Temp | Reasoning Effort | Role |
+|-------|-------|------|------------------|------|
+| **plan** | `big-pickle` | 0.3 | high | Architecture design & planning orchestrator |
+| **build** | `big-pickle` | 0.3 | medium | Primary build orchestrator — delegates to subagents, never implements directly |
+| **coder** | `big-pickle` | 0.2 | high | Technical implementation specialist for writing and modifying code |
+| **explore** | `deepseek-v4-flash-free` | 0.2 | low | Fast agent specialized for exploring codebases |
+| **researcher** | `nemotron-3-super-free` | 0.4 | high | Knowledge architect for external research and documentation |
+| **scribe** | `deepseek-v4-flash-free` | 1.0 | low | Human-facing content specialist for documentation and prose |
+| **reviewer** | `nemotron-3-super-free` | 0.1 | high | Expert code reviewer for security, performance, and philosophy compliance |
 
-| Agent       | Model                           | Description                                                                 |
-|-------------|---------------------------------|-----------------------------------------------------------------------------|
-| `coder`     | `opencode/big-pickle`           | Technical implementation specialist for writing and modifying code          |
-| `explore`   | `opencode/deepseek-v4-flash-free` | Codebase search specialist using read-only commands (find, grep, git)       |
-| `researcher`| `opencode/nemotron-3-super-free` | Knowledge architect for external research and documentation                 |
-| `reviewer`  | `opencode/nemotron-3-super-free` | Expert code reviewer for security, performance, and philosophy compliance   |
-| `scribe`    | `opencode/deepseek-v4-flash-free` | Human-facing content specialist for documentation and prose                 |
+### Agent Details
 
-## Orchestration Flow
+#### plan
+> **Model:** `opencode/big-pickle` | **Temp:** 0.3 | **Reasoning:** high
 
-All agents run asynchronously via the task/delegation mechanism, each with its own model, permission set, and system prompt.
+Architecture design and planning orchestrator. Delegates to subagents but cannot edit, write, or execute shell commands directly. Manages the development plan and coordinates task distribution.
 
-- **`build`** (primary orchestrator) receives high-level tasks from the user, delegates work to specialist agents, interprets results, and decides next steps. It never implements directly.
-- **`plan`** handles architecture design and implementation planning. It delegates research to `researcher`/`explore`, designs the plan, and saves it via `plan_save`.
-- **`coder`** implements code with full write/edit/bash permissions. Before implementing, it loads the relevant philosophy skill (`code-philosophy` or `frontend-philosophy`), follows its rules, and runs verification (lint, type-check, tests) after changes.
-- **`explore`** searches the codebase using read-only commands (`find`, `grep`, `rg`, `git status/log/diff`, `cat`, `head`, `tail`, `wc`, `tree`, etc.). It cannot access external resources.
-- **`researcher`** gathers external knowledge from web searches, GitHub, documentation, and package registries via MCP tools (`context7`, `exa`, `gh_grep`) and read-only bash commands. It returns complete, implementation-ready findings with citations.
-- **`reviewer`** reviews code for correctness, security, performance, and style. Findings are classified by severity (🔴 Critical, 🟠 Major, 🟡 Minor, 🟢 Nitpick) and only reported at ≥80% confidence.
-- **`scribe`** writes documentation, commit messages, PR descriptions, and changelogs. It can read and write files but cannot execute shell commands.
+- **Permissions:** edit:deny, write:deny, bash:deny, task:allow, worktree\_\*:allow, context7\_\*:allow
 
-### Read-only vs Write-capable Routing
+#### build
+> **Model:** `opencode/big-pickle` | **Temp:** 0.3 | **Reasoning:** medium
 
-| Agent Type | Tool Used | Reason |
-|------------|-----------|--------|
-| Read-only sub-agents (`explore`, `researcher`, `reviewer`) | `delegate` | Background sessions, async, auto-persisted |
-| Write-capable sub-agents (`coder`, `scribe`) | `task` | Native task, preserves undo/branching |
+Primary build orchestrator. Coordinates implementation through delegation to subagents — never implements directly. Executes tasks and manages worktrees.
 
-## Plugins
+- **Permissions:** edit:deny, write:deny, bash:deny, task:allow, worktree\_\*:allow, exa\_\*:allow
 
-### System Plugins
+#### coder
+> **Agent file:** `agents/coder.md` | **Mode:** subagent
+>
+> *"Technical implementation specialist for writing and modifying code"*
 
-- **background-agents**: Unified delegation system for OpenCode. Replaces native `task` tool with persistent, async-first agent delegation. All agent outputs are persisted to storage; the orchestrator receives only key references with notification tags.
-- **notify**: Native OS notifications for OpenCode. Notifies the human when the AI needs them back (task ready, error, permission required). Uses cmux notifications when available, with desktop notification fallback. Auto-detects terminal emulator and suppresses notifications when terminal is focused.
-- **workspace-plugin**: KDCO Workspace Plugin. Provides plan management (`plan_save`, `plan_read`), targeted rule injection (agent routing, philosophy loading, code review protocol), coder task tracking for review triggers, and compaction hooks to inject plan context.
-- **worktree**: OCX Worktree Plugin. Creates isolated git worktrees for AI development sessions with seamless terminal spawning across macOS, Windows, and Linux. Supports config file sync, directory symlinking, and post-create/pre-delete hooks.
+The primary code-writing agent. Has full read/write/edit and bash access but is denied access to external MCP tools (context7, exa) and planning/todo read operations.
 
-### NPM Plugins
+- **Permissions:** read:allow, write:allow, edit:allow, glob:allow, grep:allow, bash:allow; context7\_\*:deny, exa\_\*:deny, gh\_grep\_\*:deny, plan\_read:deny, todoread:deny
 
-- `@tarquinen/opencode-dcp@3.1.3`
-- `@franlol/opencode-md-table-formatter@0.0.6`
+#### explore
+> **Agent file:** `agents/explore.md` | **Mode:** subagent
+>
+> *"Fast agent specialized for exploring codebases"*
 
-### TUI Plugins
+Lightweight exploration agent using the flash-free model. Optimized for quick read-only codebase searches with very low temperature and reasoning effort.
 
-- `opencode-subagent-statusline`
-- `opencode-usage-dashboard`
+- **Permissions:** edit:deny, write:deny, plan\_read:deny, todoread:deny; bash limited to read-only commands (glob, grep, find, cat, rg, ls, bat, less, head, tail, wc, sort, uniq, file, stat, du, diff, tree, which, type, shasum, md5sum, sha256sum, xxd, hexdump, readlink, realpath, dirname, basename, jq, yq, htop, ps, echo, printf, env, hostname, date, cal, uptime, uname, id, whoami, lsof, ss, ip, df, free, nproc, timedatectl, systemctl, journalctl, apt-cache, dpkg, rpm, pkg-config). Bash for interactive commands denied.
+
+#### researcher
+> **Agent file:** `agents/researcher.md` | **Mode:** subagent
+>
+> *"Knowledge architect for external research and documentation"*
+
+External research specialist with access to remote MCP services (context7, exa), web fetching, and GitHub grep. Denied write/edit and most bash commands.
+
+- **Permissions:** context7\_\*:allow, exa\_\*:allow, gh\_grep\_\*:allow, webfetch:allow; write:deny, edit:deny, plan\_read:deny, todoread:deny; bash limited to research tools (curl, wget, gh, dig, nslookup, whois, ping, traceroute, nc, nmap, openssl, python3, pip3, uv, jq, yq, rg, cat, less, head, tail, grep, sort, uniq, wc, echo, printf, date, sleep, which, type, readlink, realpath, dirname, basename).
+
+#### scribe
+> **Agent file:** `agents/scribe.md` | **Mode:** subagent
+>
+> *"Human-facing content specialist for documentation and prose"*
+
+Documentation and prose writer with high temperature (1.0) for creative output. Can read, write, edit, glob, and grep, but has no bash or planning access.
+
+- **Permissions:** edit:allow, glob:allow, read:allow, write:allow; bash:\*:deny, plan\_read:deny, todoread:deny
+
+#### reviewer
+> **Agent file:** `agents/reviewer.md` | **Mode:** subagent
+>
+> *"Expert code reviewer for security, performance, and philosophy compliance"*
+
+Lowest temperature (0.1) for precise, deterministic code review. Has access to plan and delegation read operations, plus git diff/log/show/blame. Allowed `rg` for content search. Denied write/edit.
+
+- **Permissions:** plan\_read:allow, delegation\_read:allow, delegation\_list:allow; edit:deny, write:deny; bash limited to git diff\*, git log\*, git show\*, git blame\*, and rg.
+
+### Permission Model
+
+Each agent has a granular permission set that controls access to:
+
+- **System operations:** `edit`, `write`, `bash`
+- **Task delegation:** `task` (plan/build only)
+- **Worktree management:** `worktree_*` (plan/build only)
+- **External MCP tools:** `context7_*`, `exa_*`, `gh_grep_*`
+- **Web fetching:** `webfetch`
+- **Internal tools:** `plan_read`, `todoread`, `delegation_read`, `delegation_list`
+- **Read-only tools:** `read`, `glob`, `grep` (available to most agents)
+
+Agents that can edit/write code: **coder**, **scribe**
+Agents that can run bash: **coder** (full), **explore** (read-only), **researcher** (research tools), **reviewer** (git/rg only)
+Agents that can delegate tasks: **plan**, **build**
+Agents with external MCP access: **plan** (context7), **build** (exa), **researcher** (context7, exa, GitHub grep, webfetch)
+
+---
 
 ## MCP Servers
 
-| Server   | Type   | URL                           |
-|----------|--------|-------------------------------|
-| context7 | remote | `https://mcp.context7.com/mcp`  |
-| exa      | remote | `https://mcp.exa.ai/mcp`        |
-| gh_grep  | remote | `https://mcp.grep.app`          |
+| Server | Type | Access | Description |
+|--------|------|--------|-------------|
+| **context7** | remote | plan, researcher | Model Context Protocol server at `mcp.context7.com` |
+| **exa** | remote | build, researcher | Model Context Protocol server at `mcp.exa.ai` |
+| **fast-filesystem** | local | coder, explore, scribe | Fast filesystem operations via `npx -y fast-filesystem-mcp` |
+| **github** | local | coder (partial), researcher, reviewer | GitHub API via `gh mcp` |
+| **duckduckgo** | local | researcher | Web search via `npx -y duckduckgo-mcp-server` |
+| **playwright** | local | coder | Browser automation via `npx -y @playwright/mcp` |
+| **sequential-thinking** | local | plan, build, reviewer | Structured reasoning via `npx -y @modelcontextprotocol/server-sequential-thinking` |
+
+---
+
+## Plugins
+
+### NPM Plugins
+
+| Plugin | Version | Purpose |
+|--------|---------|---------|
+| `@tarquinen/opencode-dcp` | 3.1.3 | Delegation Context Persistence — maintains context across delegation turns |
+| `@franlol/opencode-md-table-formatter` | 0.0.6 | Markdown table formatting and alignment |
+
+### TUI Plugins
+
+| Plugin | Purpose |
+|--------|---------|
+| `opencode-subagent-statusline` | Displays current subagent status in terminal status line |
+| `opencode-usage-dashboard` | Visual dashboard for token/model usage metrics |
+
+### Local Plugin Modules
+
+Located in `plugins/`:
+
+#### background-agents.ts
+> **JSDoc:** *"Unified delegation system for OpenCode"*
+
+Replaces the native `task` tool with a persistent, async-first delegation system. Enables background agent execution with status tracking, delegation lifecycle management, and continuity across turns.
+
+#### notify.ts
+> **JSDoc:** *"Native OS notifications for OpenCode"*
+
+Sends native OS desktop notifications when the AI requires human attention (e.g., permission requests, task completion, errors). Uses `node-notifier` for cross-platform support.
+
+#### workspace-plugin.ts
+> **JSDoc:** *"KDCO Workspace Plugin"* / *"Provides plan management and targeted rule injection"*
+
+Exposes `plan_save` and `plan_read` tools for persistent plan management. Injects routing rules into agent communication for targeted delegation.
+
+#### worktree.ts
+> **JSDoc:** *"OCX Worktree Plugin"*
+
+Creates isolated git worktrees for AI development sessions. Each session gets a dedicated worktree with seamless terminal spawning, preventing cross-session contamination.
+
+---
 
 ## Skills
 
-| Skill               | Description                                                                                                                          |
-|---------------------|--------------------------------------------------------------------------------------------------------------------------------------|
-| code-philosophy     | Internal logic and data flow philosophy (The 5 Laws of Elegant Defense). Understand deeply to ensure code guides data naturally and prevents errors. |
-| code-review         | Comprehensive code review methodology with severity classification and confidence thresholds.                                        |
-| frontend-philosophy | Visual & UI philosophy (The 5 Pillars of Intentional UI). Understand deeply to avoid "AI slop" and create distinctive, memorable interfaces. |
-| plan-protocol       | Guidelines for creating and managing implementation plans with citations.                                                            |
-| plan-review         | Criteria for reviewing implementation plans against quality standards.                                                               |
+Located in `skills/`. Each skill has a `SKILL.md` with frontmatter metadata.
+
+| Skill | Description |
+|-------|-------------|
+| **code-philosophy** | Internal logic and data flow philosophy — *The 5 Laws of Elegant Defense* (Defensive Depth, Immutable State, Pure Functions, Fail Fast, Comprehensive Contracts) |
+| **frontend-philosophy** | Visual and UI philosophy — *The 5 Pillars of Intentional UI* (Intentional State, Z-Axis Awareness, Polymorphic Components, Anticipatory UX, Explicit Gestures) |
+| **code-review** | Comprehensive code review methodology with severity classification and confidence thresholds. Systematic approach to security, performance, maintainability, and philosophy compliance |
+| **plan-protocol** | Guidelines for creating and managing implementation plans with citation requirements |
+| **plan-review** | Criteria for reviewing implementation plans against quality standards (clarity, completeness, feasibility, consistency) |
+| **z-mcp** | Discover, search, vet, install, and delete MCP servers from 3 provider indexes |
+| **z-skill** | Discover, search, vet, install, and delete agent skills from 4 provider indexes |
+
+---
 
 ## Commands
 
-| Command  | Description                                            |
-|----------|--------------------------------------------------------|
-| `review` | Run code review on files or recent changes             |
+Located in `commands/`.
 
-## Tools / Instructions
+| Command | File | Description |
+|---------|------|-------------|
+| **review** | `commands/review.md` | Run code review on files or recent changes. Invokes the code review workflow against loaded philosophy standards |
+
+---
+
+## Instructions
+
+Located in `tools/`.
 
 | File | Purpose |
 |------|---------|
-| `./tools/philosophy.md` | **Code Philosophy - MANDATORY**: Before writing or modifying any code, agents must load the relevant philosophy skill (`frontend-philosophy` for UI, `code-philosophy` for backend), verify implementation against the philosophy checklist, and refactor if needed. |
+| `tools/philosophy.md` | **Code Philosophy — Mandatory.** Before writing or modifying code, agents MUST load the relevant philosophy skill (code-philosophy for backend, frontend-philosophy for UI), verify implementation against the philosophy checklist, and refactor if any principle is violated |
 
-## Registry Information
+This instruction file is registered in `opencode.jsonc` under the `instructions` field, making it a system-level constraint applied to every agent session.
 
-- **Registry URL**: `https://registry.kdco.dev`
-- **Component**: `kdco/ws`
-- **Profile Path**: `~/.config/opencode/profiles/ws/`
-- **Alias**: Also installable as `zhran/ws` from `https://ahmed-zhran.github.io/ocx-profiles/`
+---
+
+## Delegation Architecture
+
+The `ws` profile enforces a **strict delegation hierarchy**:
+
+```
+plan ──► task ──► build ──► task ──► coder/explore/researcher/scribe/reviewer
+  │                                 ▲
+  │                                 │
+  └────── worktree isolation ───────┘
+```
+
+1. **plan** designs the architecture and creates worktrees
+2. **build** orchestrates implementation through delegation
+3. **coder/explore/researcher/scribe/reviewer** execute specific subtasks
+4. The **DCP plugin** (`@tarquinen/opencode-dcp`) persists delegation context across turns
+5. The **background-agents plugin** replaces the native task tool with async-first delegation
+
+Agents with `task:allow` (plan, build) can delegate; agents without it must be invoked directly or by a delegator.
+
+---
+
+## Philosophy
+
+The profile is governed by two complementary code philosophies, enforced via `tools/philosophy.md`:
+
+### Code Philosophy — The 5 Laws of Elegant Defense
+*Loaded for backend/logic tasks*
+
+1. **Defensive Depth** — Validate at every boundary, never trust input
+2. **Immutable State** — Prefer `const` and immutable data structures
+3. **Pure Functions** — Same input → same output, no side effects
+4. **Fail Fast** — Crash early with clear error messages
+5. **Comprehensive Contracts** — TypeScript types, runtime validation, documented invariants
+
+### Frontend Philosophy — The 5 Pillars of Intentional UI
+*Loaded for UI/frontend tasks*
+
+1. **Intentional State** — Every state must have a purpose
+2. **Z-Axis Awareness** — Think in layers, not just pixels
+3. **Polymorphic Components** — One component, many contexts
+4. **Anticipatory UX** — Design for what the user will do next
+5. **Explicit Gestures** — Every interaction must feel intentional
+
+---
+
+## Quick Reference
+
+| Item | Count |
+|------|-------|
+| Agents | 7 |
+| MCP Servers | 7 |
+| NPM Plugins | 2 |
+| TUI Plugins | 2 |
+| Local Plugin Modules | 4 |
+| Skills | 7 |
+| Commands | 1 |
+| Instruction Files | 1 |
+| Registry | kdco.dev (OCX) |
+| Models | big-pickle (main), deepseek-v4-flash-free (small) |
